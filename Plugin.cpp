@@ -1,6 +1,4 @@
-#include "Union.h"
 #include "DamagePopup.h"
-
 namespace GOTHIC_ENGINE
 {
     int g_ShowDamageValue = 0;
@@ -22,11 +20,11 @@ namespace GOTHIC_ENGINE
         oCNpc*,
         void*,
         oCNpc::oSDamageDescriptor&
-    )> Ivk_oCNpc_OnDamage_Hit(
-        (void*)0x00666610,
-        &My_OnDamage_Hit,
-        IVK_NORMAL
-    );
+        )> Ivk_oCNpc_OnDamage_Hit(
+            (void*)0x00666610,
+            &My_OnDamage_Hit,
+            IVK_NORMAL
+        );
 
     int __fastcall My_OnDamage_Hit(
         oCNpc* victim,
@@ -41,7 +39,16 @@ namespace GOTHIC_ENGINE
         if (desc.pNpcAttacker == player && hpDiff > 0)
         {
             // Popup
-            new DamagePopup(victim, hpDiff, false, desc.enuModeDamage);
+            new DamagePopup(
+                reinterpret_cast<zCVob*>(victim),
+                hpDiff,
+                false,
+                static_cast<oEDamageIndex>(desc.enuModeDamage)
+            );
+
+
+
+
 
             // GUI text
             g_ShowDamageValue = hpDiff;
@@ -75,11 +82,11 @@ namespace GOTHIC_ENGINE
         float,
         int,
         const zVEC3&
-    )> Ivk_oCNpc_OnDamage(
-        (void*)0x0067B860,
-        &My_OnDamage,
-        IVK_NORMAL
-    );
+        )> Ivk_oCNpc_OnDamage(
+            (void*)0x0067B860,
+            &My_OnDamage,
+            IVK_NORMAL
+        );
 
     int __fastcall My_OnDamage(
         oCNpc* victim,
