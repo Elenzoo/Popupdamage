@@ -50,7 +50,7 @@ namespace GOTHIC_ENGINE
         if (view)
         {
             view->Close();
-            view->Release();
+           
             view = nullptr;
         }
     }
@@ -76,7 +76,7 @@ namespace GOTHIC_ENGINE
         color.alpha = (int)alpha;
 
         view->SetFontColor(color);
-        view->ClrPrintWin();
+       
         view->Print(x, y, text);
     }
 }
