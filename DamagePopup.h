@@ -1,6 +1,6 @@
-#pragma once
+#ifndef DAMAGEPOPUP_H
+#define DAMAGEPOPUP_H
 
-#include "Union.h"
 
 namespace GOTHIC_ENGINE
 {
@@ -24,3 +24,5 @@ namespace GOTHIC_ENGINE
 
     extern zCArray<DamagePopup*> g_Popups;
 }
+
+#endif // DAMAGEPOPUP_H
