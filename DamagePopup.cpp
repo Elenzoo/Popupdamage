@@ -7,18 +7,22 @@ namespace GOTHIC_ENGINE
     DamagePopup::DamagePopup(zCVob* target, int dmg, bool isCrit, oEDamageIndex dmgIndex)
     {
         this->target = target;
-        this->offset = zVEC3(0, 100.0f, 0);
-        this->lifetime = 60; // 1s at 60 FPS
+        this->lifetime = 400; // ok. 4 sekundy przy 100 FPS
 
-        // Prepare text
-        text = "-";
-        text += zSTRING(dmg);
+        // Każdy kolejny popup jest wyżej, żeby się nie nakładały
+        this->offset = zVEC3(
+            0,
+            target->bbox3D.maxs[VY] + 50.0f + g_Popups.GetNumInList() * 30.0f,
+            0
+        );
 
-        // Color logic
+        // Usunięty minus — dmg pokazujemy jako liczbę dodatnią
+        text = zSTRING(dmg);
+
         if (isCrit)
         {
             color = zCOLOR(231, 76, 60, 255);
-            scale = 2.0f;
+            scale = 1.2f;
         }
         else
         {
@@ -34,11 +38,11 @@ namespace GOTHIC_ENGINE
                 color = zCOLOR(255, 180, 50, 255);
                 break;
             }
-            scale = 1.0f;
+            scale = 0.8f;
         }
 
         view = new zCView(0, 0, 8192, 8192);
-        view->SetFont("FONT_DEFAULT.TGA");
+        view->SetFont("FONT_OLD_20_WHITE.TGA");
         view->SetFontColor(color);
         view->Open();
 
@@ -50,7 +54,6 @@ namespace GOTHIC_ENGINE
         if (view)
         {
             view->Close();
-           
             view = nullptr;
         }
     }
@@ -58,25 +61,31 @@ namespace GOTHIC_ENGINE
     void DamagePopup::Update()
     {
         lifetime--;
-        if (lifetime <= 0)
+
+        if (lifetime <= 0 || !target || !target->globalVobTreeNode)
         {
+            g_Popups.Remove(this);
             delete this;
             return;
         }
 
-        if (!target) return;
+        offset[VY] += 0.5f;
 
         zVEC3 worldPos = target->GetPositionWorld() + offset;
-        zVEC3 screenPos = ogame->GetCamera()->GetTransform(zTCamTrafoType::zCAM_TRAFO_VIEW) * worldPos;
 
         int x, y;
-        ogame->GetCamera()->Project(&screenPos, x, y);
+        ogame->GetCamera()->Project(&worldPos, x, y);
 
-        float alpha = min(255, lifetime * 8.5f);
+        // Ograniczamy współrzędne do ekranu
+        x = max(0, min(x, 1920));
+        y = max(0, min(y, 1080));
+
+        float progress = float(lifetime) / 400.0f;
+        float alpha = progress * 255.0f;
         color.alpha = (int)alpha;
 
         view->SetFontColor(color);
-       
         view->Print(x, y, text);
     }
+
 }
