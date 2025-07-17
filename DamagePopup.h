@@ -1,28 +1,29 @@
-#ifndef DAMAGEPOPUP_H
-#define DAMAGEPOPUP_H
+// =========================
+// DamagePopup.h
+// =========================
+#ifndef __DAMAGE_POPUP_H__
+#define __DAMAGE_POPUP_H__
 
-
-namespace GOTHIC_ENGINE
-{
-    class DamagePopup
-    {
+namespace GOTHIC_ENGINE {
+    class DamagePopup {
     public:
-        zCView* view;
+        int lifetime;
+        zVEC3 offset;
         zSTRING text;
         zCOLOR color;
-        int lifetime;
         float scale;
-        zCVob* target;
-        zVEC3 offset;
+        zCView* view;
 
         DamagePopup(zCVob* target, int dmg, bool isCrit, oEDamageIndex dmgIndex);
         ~DamagePopup();
 
         void Update();
-        void Print();
+
+    private:
+        zCVob* target;
     };
 
     extern zCArray<DamagePopup*> g_Popups;
 }
 
-#endif // DAMAGEPOPUP_H
+#endif // __DAMAGE_POPUP_H__
