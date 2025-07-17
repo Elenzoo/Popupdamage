@@ -1,150 +1,63 @@
 #include "DamagePopup.h"
-namespace GOTHIC_ENGINE
-{
-    int g_ShowDamageValue = 0;
-    int g_ShowDamageTimer = 0;
 
+namespace GOTHIC_ENGINE {
+
+    struct DamageLine {
+        zSTRING text;
+        int timer;
+    };
+
+    zCArray<DamageLine> g_DamageLog;
     zCOLOR g_GuiDamageColor = zCOLOR(255, 180, 50, 255);
-    zSTRING g_GuiDamageText;
 
-    // -------------------------------------------------
-    // OnDamage_Hit Hook
-    // -------------------------------------------------
-    int __fastcall My_OnDamage_Hit(
-        oCNpc* victim,
-        void* edx,
-        oCNpc::oSDamageDescriptor& desc
-    );
+    int __fastcall My_OnDamage_Hit(oCNpc* victim, void*, oCNpc::oSDamageDescriptor& desc);
+    CInvoke<int(__fastcall*)(oCNpc*, void*, oCNpc::oSDamageDescriptor&)> Ivk_oCNpc_OnDamage_Hit(
+        (void*)0x00666610, &My_OnDamage_Hit, IVK_NORMAL);
 
-    CInvoke<int(__fastcall*)(
-        oCNpc*,
-        void*,
-        oCNpc::oSDamageDescriptor&
-        )> Ivk_oCNpc_OnDamage_Hit(
-            (void*)0x00666610,
-            &My_OnDamage_Hit,
-            IVK_NORMAL
-        );
-
-    int __fastcall My_OnDamage_Hit(
-        oCNpc* victim,
-        void* edx,
-        oCNpc::oSDamageDescriptor& desc
-    )
-    {
-        int initialHp = victim->attribute[NPC_ATR_HITPOINTS];
+    int __fastcall My_OnDamage_Hit(oCNpc* victim, void* edx, oCNpc::oSDamageDescriptor& desc) {
+        int hpBefore = victim->attribute[NPC_ATR_HITPOINTS];
         int result = Ivk_oCNpc_OnDamage_Hit(victim, edx, desc);
-        int hpDiff = initialHp - victim->attribute[NPC_ATR_HITPOINTS];
+        int dmgDealt = hpBefore - victim->attribute[NPC_ATR_HITPOINTS];
 
-        if (desc.pNpcAttacker == player && hpDiff > 0)
-        {
-            // Popup
-            new DamagePopup(
-                reinterpret_cast<zCVob*>(victim),
-                hpDiff,
-                false,
-                static_cast<oEDamageIndex>(desc.enuModeDamage)
-            );
+        if (desc.pNpcAttacker == player && dmgDealt > 0) {
+            new DamagePopup(reinterpret_cast<zCVob*>(player), dmgDealt, false, static_cast<oEDamageIndex>(desc.enuModeDamage));
 
-
-
-
-
-            // GUI text
-            g_ShowDamageValue = hpDiff;
-            g_ShowDamageTimer = 60;
-
-            g_GuiDamageColor = zCOLOR(255, 180, 50, 255);
-            g_GuiDamageText = "Zadane obrażenia: " + zSTRING(hpDiff);
+            DamageLine line;
+            line.text = "OBRAZENIA : " + zSTRING(dmgDealt);
+            line.timer = 2160;
+            g_DamageLog.InsertEnd(line);
+            if (g_DamageLog.GetNumInList() > 5)
+                g_DamageLog.RemoveIndex(0);
         }
 
         return result;
     }
 
-    // -------------------------------------------------
-    // OnDamage Hook
-    // -------------------------------------------------
-    int __fastcall My_OnDamage(
-        oCNpc* victim,
-        void* edx,
-        zCVob* attacker,
-        zCVob* weapon,
-        float fDamage,
-        int iDamageType,
-        const zVEC3& dir
-    );
-
-    CInvoke<int(__fastcall*)(
-        oCNpc*,
-        void*,
-        zCVob*,
-        zCVob*,
-        float,
-        int,
-        const zVEC3&
-        )> Ivk_oCNpc_OnDamage(
-            (void*)0x0067B860,
-            &My_OnDamage,
-            IVK_NORMAL
-        );
-
-    int __fastcall My_OnDamage(
-        oCNpc* victim,
-        void* edx,
-        zCVob* attacker,
-        zCVob* weapon,
-        float fDamage,
-        int iDamageType,
-        const zVEC3& dir
-    )
-    {
-        int initialHp = victim->attribute[NPC_ATR_HITPOINTS];
-        int result = Ivk_oCNpc_OnDamage(victim, edx, attacker, weapon, fDamage, iDamageType, dir);
-        int hpDiff = initialHp - victim->attribute[NPC_ATR_HITPOINTS];
-
-        if (attacker == player && hpDiff > 0)
-        {
-            new DamagePopup(victim, hpDiff, false, (oEDamageIndex)iDamageType);
-
-            g_ShowDamageValue = hpDiff;
-            g_ShowDamageTimer = 60;
-            g_GuiDamageColor = zCOLOR(255, 180, 50, 255);
-            g_GuiDamageText = "Zadane obrażenia: " + zSTRING(hpDiff);
-        }
-
-        return result;
-    }
-
-    void Game_Init()
-    {
-        MessageBoxA(0, "PLUGIN LOADED!", "Union Test", MB_OK);
-    }
-
-    void Game_Loop()
-    {
-        // Popup updates
+    void Game_Loop() {
         for (int i = 0; i < g_Popups.GetNumInList(); ++i)
-        {
             if (g_Popups[i])
                 g_Popups[i]->Update();
-        }
 
-        // GUI damage text
-        if (g_ShowDamageTimer > 0)
-        {
-            g_ShowDamageTimer--;
+        int fontHeight = screen->FontY();
+        int spacing = fontHeight + 10;
+        int blockHeight = g_DamageLog.GetNumInList() * spacing;
+        int startY = (2 * 1080 / 3) - (blockHeight / 2);
+        int x = 50;
 
-            int screenWidth = screen->anx(0);
-            int screenHeight = screen->any(0);
-
-            int x = 50;
-            int y = screenHeight / 2;
-
-            screen->SetFontColor(g_GuiDamageColor);
-            screen->Print(x, y, g_GuiDamageText);
+        screen->SetFontColor(g_GuiDamageColor);
+        for (int i = 0; i < g_DamageLog.GetNumInList();) {
+            g_DamageLog[i].timer--;
+            if (g_DamageLog[i].timer <= 0)
+                g_DamageLog.RemoveIndex(i);
+            else {
+                int y = startY + i * spacing;
+                screen->Print(x, y, g_DamageLog[i].text);
+                i++;
+            }
         }
     }
 
+    void Game_Init() {}
     void Game_Entry() {}
     void Game_Exit() {}
     void Game_PreLoop() {}
