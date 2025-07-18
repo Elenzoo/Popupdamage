@@ -1,10 +1,8 @@
-// =========================
-// DamagePopup.h
-// =========================
 #ifndef __DAMAGE_POPUP_H__
 #define __DAMAGE_POPUP_H__
 
 namespace GOTHIC_ENGINE {
+
     class DamagePopup {
     public:
         int lifetime;
