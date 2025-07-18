@@ -23,7 +23,7 @@ namespace GOTHIC_ENGINE {
             new DamagePopup(reinterpret_cast<zCVob*>(player), dmgDealt, false, static_cast<oEDamageIndex>(desc.enuModeDamage));
 
             DamageLine line;
-            line.text = "OBRAZENIA : " + zSTRING(dmgDealt);
+            line.text = "OBRAŻENIA : " + zSTRING(dmgDealt);
             line.timer = 2160;
             g_DamageLog.InsertEnd(line);
             if (g_DamageLog.GetNumInList() > 5)
@@ -34,14 +34,16 @@ namespace GOTHIC_ENGINE {
     }
 
     void Game_Loop() {
+        // Aktualizacja popupów
         for (int i = 0; i < g_Popups.GetNumInList(); ++i)
             if (g_Popups[i])
                 g_Popups[i]->Update();
 
+        // GUI tekstowe po lewej
         int fontHeight = screen->FontY();
         int spacing = fontHeight + 10;
         int blockHeight = g_DamageLog.GetNumInList() * spacing;
-        int startY = (2 * 1080 / 3) - (blockHeight / 2);
+        int startY = (2 * 8192 / 3) - (blockHeight / 2);
         int x = 50;
 
         screen->SetFontColor(g_GuiDamageColor);
@@ -57,6 +59,7 @@ namespace GOTHIC_ENGINE {
         }
     }
 
+    // Reszta funkcji Union SDK
     void Game_Init() {}
     void Game_Entry() {}
     void Game_Exit() {}
