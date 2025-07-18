@@ -49,23 +49,24 @@ namespace GOTHIC_ENGINE {
             return;
         }
 
-        // Pozycja: nad głową gracza
+        // Nad głową gracza, ale bardziej na środku
         zVEC3 worldPos = player->GetPositionWorld();
-        worldPos[VY] += (player->bbox3D.maxs[VY] - player->bbox3D.mins[VY]) * 0.75f;
+        worldPos[VY] += (player->bbox3D.maxs[VY] - player->bbox3D.mins[VY]) * 1.1f;
 
-        int x, y;
-        ogame->GetCamera()->Project(&worldPos, x, y);
+        zVEC2 viewPos;
+        ogame->GetCamera()->Project(&worldPos, viewPos[VX], viewPos[VY]);
 
-        // Ograniczenie pozycji do obszaru widoku Union SDK (8192 x 8192)
-        if (x < 0) x = 0;
-        if (x > 8191) x = 8191;
-        if (y < 0) y = 0;
-        if (y > 8191) y = 8191;
+        // Ograniczenie do 8192x8192 (zgodnie z Union SDK)
+        if (viewPos[VX] < 0) viewPos[VX] = 0;
+        if (viewPos[VX] > 8191) viewPos[VX] = 8191;
+        if (viewPos[VY] < 0) viewPos[VY] = 0;
+        if (viewPos[VY] > 8191) viewPos[VY] = 8191;
 
         float progress = float(lifetime) / 400.0f;
         color.alpha = (int)(progress * 255.0f);
 
         view->SetFontColor(color);
-        view->Print(x, y, text);
+        view->PrintCX((int)viewPos[VY], text);  // Centrum w poziomie, wysokość dynamiczna
     }
+
 }
